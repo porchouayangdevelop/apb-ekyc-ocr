@@ -86,7 +86,7 @@
 
 <script setup lang="ts">
 import { useImageConverter } from '@/composables/useImageConverter'
-import {type OcrResult, useOcrStore} from '@/stores/ocrStore'
+
 const {
   selectedType,
   previewUrl,

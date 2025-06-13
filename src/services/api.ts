@@ -1,3 +1,4 @@
+// src/services/api.ts
 import {axios} from "@/plugins/axios";
 import  type { AxiosResponse} from "axios";
 
@@ -7,20 +8,6 @@ export interface ApiResponse<T = any> {
   message?: string;
   errors?: string[];
 }
-
-// export interface  UploadResponse<T = any> {
-//   id: string
-//   filename: string
-//   url: string
-//   base64?: string
-// }
-
-// export interface DocumentValidationResponse {
-//   isValid: boolean
-//   confidence: number
-//   documentType: string
-//   extractedData?: Record<string, any>
-// }
 
 interface EncodePasswordResData {
   password: string;
@@ -38,7 +25,6 @@ export interface EncodePasswordResponse {
   requestId: string;
   data: EncodePasswordResData
 }
-
 
 export interface AuthRequest {
   username: string;
@@ -66,21 +52,19 @@ export interface OcrResponse {
   data: any // You can define a more specific type based on your OCR response structure
 }
 
-
-
 class ApiService {
   static async encodePassword(): Promise<EncodePasswordResponse> {
-    const response:AxiosResponse<EncodePasswordResponse> = await axios.get(`feel_apis/auth/getEncodedPassword?originalPassword=GRGgrg0629`);
+    const response: AxiosResponse<EncodePasswordResponse> = await axios.get(`feel_apis/auth/getEncodedPassword?originalPassword=GRGgrg0629`);
     return response.data
   }
 
-  static async login(AuthRequest: AuthRequest): Promise<AuthResponse> {
-    const response:AxiosResponse<AuthResponse> = await axios.post(`feel_apis/auth/login`, AuthRequest);
+  static async login(authRequest: AuthRequest): Promise<AuthResponse> {
+    const response: AxiosResponse<AuthResponse> = await axios.post(`feel_apis/auth/login`, authRequest);
     return response.data
   }
 
-  static async ocrDocumentProcess(OcrRequest: OcrRequest) :Promise<OcrResponse>{
-    const response:AxiosResponse<OcrResponse> = await axios.post(`feel_apis/ocr/structure`, OcrRequest);
+  static async ocrDocumentProcess(ocrRequest: OcrRequest): Promise<OcrResponse> {
+    const response: AxiosResponse<OcrResponse> = await axios.post(`feel_apis/ocr/structure`, ocrRequest);
     return response.data;
   }
 
@@ -89,32 +73,37 @@ class ApiService {
     return response.data
   }
 
-
-  static async setAuthToken(token: string, refresh?: string ) {
-    if(token) {
+  static setAuthToken(token: string, refresh?: string): void {
+    if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
       localStorage.setItem('token', token);
-      localStorage.setItem('refreshToken', refresh? refresh : '');
-    }
-    else  {
+      if (refresh) {
+        localStorage.setItem('refreshToken', refresh);
+      }
+    } else {
       axios.defaults.headers.common['Authorization'] = ''
       localStorage.removeItem('token');
     }
   }
 
-  static async clearAuthToken() {
+  static clearAuthToken(): void {
     axios.defaults.headers.common['Authorization'] = ''
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
   }
 
-  static async isAuthenticated(): Promise<boolean> {
+  static isAuthenticated(): boolean {
     const token = localStorage.getItem('token');
     return !!token;
   }
 
-  static async getAuthToken(): Promise<string | null> {
+  static getAuthToken(): string | null {
     return localStorage.getItem('token');
   }
+
+  static getRefreshToken(): string | null {
+    return localStorage.getItem('refreshToken');
+  }
 }
-export  default ApiService;
+
+export default ApiService;

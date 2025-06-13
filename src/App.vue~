@@ -1,9 +1,171 @@
-<!--<template>-->
-<!--  <v-app>-->
-<!--    <router-view />-->
-<!--  </v-app>-->
-<!--</template>-->
+<template>
+  <v-app>
+    <!-- App Bar (only show when authenticated and not on login page) -->
+    <v-app-bar
+      v-if="showAppBar"
+      color="primary"
+      density="compact"
+      elevation="2"
+    >
+      <v-app-bar-title>
+        <v-icon class="mr-2">mdi-image-text</v-icon>
+        OCR Document Processor
+      </v-app-bar-title>
 
-<!--<script lang="ts" setup>-->
-<!--  //-->
-<!--</script>-->
+      <template v-slot:append>
+        <!-- Navigation Menu -->
+        <v-btn
+          v-if="$route.path !== '/dashboard'"
+          icon="mdi-view-dashboard"
+          @click="$router.push('/dashboard')"
+          title="Dashboard"
+        ></v-btn>
+
+        <v-btn
+          v-if="$route.path !== '/'"
+          icon="mdi-upload"
+          @click="$router.push('/')"
+          title="Upload Document"
+        ></v-btn>
+
+        <!-- User Menu -->
+        <v-menu>
+          <template v-slot:activator="{ props }">
+            <v-btn icon="mdi-account-circle" v-bind="props"></v-btn>
+          </template>
+          <v-list>
+            <v-list-item>
+              <v-list-item-title>{{ userInfo.username }}</v-list-item-title>
+              <v-list-item-subtitle>Authenticated</v-list-item-subtitle>
+            </v-list-item>
+            <v-divider></v-divider>
+            <v-list-item @click="$router.push('/dashboard')">
+              <template v-slot:prepend>
+                <v-icon>mdi-view-dashboard</v-icon>
+              </template>
+              <v-list-item-title>Dashboard</v-list-item-title>
+            </v-list-item>
+            <v-list-item @click="handleLogout">
+              <template v-slot:prepend>
+                <v-icon>mdi-logout</v-icon>
+              </template>
+              <v-list-item-title>Logout</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+      </template>
+    </v-app-bar>
+
+    <!-- Main Content -->
+    <v-main>
+      <router-view />
+    </v-main>
+
+<!--    &lt;!&ndash; Footer (only show when authenticated and not on login page) &ndash;&gt;-->
+<!--    <v-footer v-if="showAppBar" class="bg-grey-lighten-1">-->
+<!--      <v-row>-->
+<!--        <v-col class="text-center" cols="12">-->
+<!--          <strong>OCR Document Processor</strong>-->
+<!--          <span v-if="ocrStore.isAuthenticated">-->
+<!--            - Authenticated as {{ userInfo.username }}-->
+<!--          </span>-->
+<!--          - {{ new Date().getFullYear() }}-->
+<!--        </v-col>-->
+<!--      </v-row>-->
+<!--    </v-footer>-->
+
+    <!-- Global Snackbar -->
+    <v-snackbar
+      v-model="snackbar.show"
+      :color="snackbar.color"
+      timeout="3000"
+      location="bottom right"
+    >
+      {{ snackbar.message }}
+      <template v-slot:actions>
+        <v-btn variant="text" @click="snackbar.show = false">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </template>
+    </v-snackbar>
+  </v-app>
+</template>
+
+<script setup lang="ts">
+import { computed, ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useOcrStore } from '@/stores/ocrStore'
+
+// Router and Store
+const route = useRoute()
+const router = useRouter()
+const ocrStore = useOcrStore()
+
+// State
+const snackbar = ref({
+  show: false,
+  message: '',
+  color: 'success' as 'success' | 'error' | 'warning' | 'info'
+})
+
+// Computed
+const userInfo = computed(() => ocrStore.authState.user || { username: 'User' })
+
+const showAppBar = computed(() => {
+  return ocrStore.isAuthenticated && route.path !== '/login'
+})
+
+// Methods
+const handleLogout = () => {
+  ocrStore.logout()
+  showSnackbar('Logged out successfully', 'info')
+  router.push('/login')
+}
+
+const showSnackbar = (message: string, color: 'success' | 'error' | 'warning' | 'info' = 'success') => {
+  snackbar.value = {
+    show: true,
+    message,
+    color
+  }
+}
+
+// Initialize store on app mount
+onMounted(() => {
+  ocrStore.initialize()
+})
+
+// Global error handler
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Unhandled promise rejection:', event.reason)
+  showSnackbar('An unexpected error occurred', 'error')
+})
+</script>
+
+<style>
+#app {
+  font-family: 'Roboto', sans-serif;
+}
+
+.v-app-bar-title {
+  font-weight: 600;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+</style>

@@ -49,8 +49,6 @@ export const useOcrStore = defineStore('ocr', () => {
   const isAuthenticated = computed(() => authState.value.isAuthenticated)
   const hasResults = computed(() => ocrResults.value.length > 0)
   const latestResult = computed(() => ocrResults.value[0] || null)
-  const hasEncodedPassword = computed(() => !!authState.value.encodedPassword)
-
 
   // Actions
   const setLoading = (loading: boolean) => {

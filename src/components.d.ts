@@ -9,6 +9,8 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AppFooter: typeof import('./components/AppFooter.vue')['default']
+    Authenticate: typeof import('./components/Authenticate.vue')['default']
+    AuthenticateSession: typeof import('./components/AuthenticateSession.vue')['default']
     AuthenticationSession: typeof import('./components/AuthenticationSession.vue')['default']
     ConversionHistory: typeof import('./components/ConversionHistory.vue')['default']
     DialogAuthenticate: typeof import('./components/DialogAuthenticate.vue')['default']
