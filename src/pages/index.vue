@@ -1,0 +1,186 @@
+<template>
+  <v-app>
+    <v-app-bar color="primary" density="compact" elevation="2">
+      <v-app-bar-title>
+        <v-icon class="mr-2">mdi-image-text</v-icon>
+        OCR Image Converter
+      </v-app-bar-title>
+      <template v-slot:append>
+        <v-btn icon="mdi-github" href="https://github.com" target="_blank"></v-btn>
+      </template>
+    </v-app-bar>
+
+    <v-main>
+      <v-container>
+        <!-- Header -->
+        <v-row>
+          <v-col cols="12">
+            <v-card class="mb-6" elevation="2">
+              <v-card-title class="text-h5 text-center py-6">
+                Convert Document Images to Base64
+              </v-card-title>
+              <v-card-subtitle class="text-center pb-4">
+                Select document type and upload your image for instant base64 conversion
+              </v-card-subtitle>
+            </v-card>
+          </v-col>
+        </v-row>
+
+        <!-- Document Type Selection -->
+        <DocumentSelector
+          :selected-type="selectedType"
+          @select="selectDocumentType"
+        />
+
+        <!-- Image Upload -->
+        <v-row v-if="selectedType">
+          <v-col cols="12">
+            <ImageUploader
+              :selected-type="selectedType"
+              :is-loading="isLoading"
+              @file-selected="handleFileSelect"
+            />
+          </v-col>
+        </v-row>
+
+        <!-- Image Preview and Base64 Output -->
+        <ImagePreview
+          :preview-url="previewUrl"
+          :base64-string="base64String"
+          :selected-type="selectedType"
+          :file-size="fileSize"
+          @copy-to-clipboard="copyToClipboard"
+          @download-base64="downloadBase64"
+        />
+
+
+
+        <v-row>
+          <v-col cols="12">
+<!--            <DialogAuthenticate-->
+<!--              v-model="showAuthDialog"-->
+<!--              @authenticated="onAuthenticated"-->
+<!--              @cancelled="onAuthCancelled"-->
+<!--            />-->
+            <DialogAuthenticate
+              v-model="showDialog"
+              :image-base64="base64String"
+              :document-type="selectedType"
+              @completed="onOcrCompleted"
+              @cancelled="onCancelled"
+            />
+
+            <!-- OCR Button -->
+            <v-btn
+              class="text-caption"
+              @click="processWithOCR"
+              :disabled="!base64String"
+              color="primary"
+            >
+              Process with OCR
+            </v-btn>
+          </v-col>
+        </v-row>
+
+        <!-- Conversion History -->
+        <v-row v-if="conversionHistory.length > 0">
+          <v-col cols="12">
+            <ConversionHistory
+              :conversion-history="conversionHistory"
+              @copy-to-clipboard="copyToClipboard"
+              @download-base64="downloadBase64"
+              @clear-history="clearHistory"
+            />
+          </v-col>
+        </v-row>
+      </v-container>
+    </v-main>
+
+    <!-- Snackbar -->
+    <v-snackbar
+      :model-value="snackbar.show"
+      @update:model-value="updateSnackbar"
+      :color="snackbar.color"
+      timeout="3000"
+      location="bottom right"
+    >
+      {{ snackbar.message }}
+      <template v-slot:actions>
+        <v-btn variant="text" @click="updateSnackbar(false)">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </template>
+    </v-snackbar>
+  </v-app>
+</template>
+
+<script setup lang="ts">
+import { useImageConverter } from '@/composables/useImageConverter'
+import {type OcrResult, useOcrStore} from '@/stores/ocrStore'
+const {
+  selectedType,
+  previewUrl,
+  base64String,
+  isLoading,
+  conversionHistory,
+  snackbar,
+  fileSize,
+  selectDocumentType,
+  handleFileSelect,
+  copyToClipboard,
+  downloadBase64,
+  clearHistory
+} = useImageConverter()
+
+const updateSnackbar = (value: boolean) => {
+  snackbar.value.show = value
+}
+
+
+const ocrStore = useOcrStore()
+const showAuthDialog = ref(false)
+const showDialog = ref(false)
+
+// Initialize store
+ocrStore.initialize()
+
+const processWithOCR = async () => {
+  if (!ocrStore.isAuthenticated) {
+    showAuthDialog.value = true
+    showDialog.value = true;
+    return
+  }
+
+  try {
+    const result = await ocrStore.processDocument(base64String.value, selectedType.value)
+    console.log('OCR Result:', result)
+  } catch (error) {
+    console.error('OCR failed:', error)
+  }
+}
+
+const onAuthenticated = () => {
+  console.log('User authenticated successfully')
+  // Proceed with OCR processing
+  processWithOCR()
+}
+
+const onAuthCancelled = () => {
+  console.log('User cancelled authentication')
+}
+
+const onOcrCompleted = (results: OcrResult[]) => {
+  console.log('OCR Results:', results)
+  // Handle the completed OCR results
+}
+
+const onCancelled = () => {
+  console.log('User cancelled the process')
+}
+</script>
+
+<style>
+#app {
+  font-family: 'Roboto', sans-serif;
+}
+</style>
