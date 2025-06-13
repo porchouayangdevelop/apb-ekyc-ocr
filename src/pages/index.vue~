@@ -52,6 +52,36 @@
           @copy-to-clipboard="copyToClipboard"
           @download-base64="downloadBase64"
         />
+
+
+
+        <v-row>
+          <v-col cols="12">
+<!--            <DialogAuthenticate-->
+<!--              v-model="showAuthDialog"-->
+<!--              @authenticated="onAuthenticated"-->
+<!--              @cancelled="onAuthCancelled"-->
+<!--            />-->
+            <DialogAuthenticate
+              v-model="showDialog"
+              :image-base64="base64String"
+              :document-type="selectedType"
+              @completed="onOcrCompleted"
+              @cancelled="onCancelled"
+            />
+
+            <!-- OCR Button -->
+            <v-btn
+              class="text-caption"
+              @click="processWithOCR"
+              :disabled="!base64String"
+              color="primary"
+            >
+              Process with OCR
+            </v-btn>
+          </v-col>
+        </v-row>
+
         <!-- Conversion History -->
         <v-row v-if="conversionHistory.length > 0">
           <v-col cols="12">

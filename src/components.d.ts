@@ -9,13 +9,17 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AppFooter: typeof import('./components/AppFooter.vue')['default']
+    AuthenticationSession: typeof import('./components/AuthenticationSession.vue')['default']
     ConversionHistory: typeof import('./components/ConversionHistory.vue')['default']
     DialogAuthenticate: typeof import('./components/DialogAuthenticate.vue')['default']
     Documentselector: typeof import('./components/Documentselector.vue')['default']
     DocumentSelector: typeof import('./components/DocumentSelector.vue')['default']
     HelloWorld: typeof import('./components/HelloWorld.vue')['default']
+    HomePage: typeof import('./components/HomePage.vue')['default']
     ImagePreview: typeof import('./components/ImagePreview.vue')['default']
     ImageUploader: typeof import('./components/ImageUploader.vue')['default']
+    OcrProcessingPage: typeof import('./components/OcrProcessingPage.vue')['default']
+    ResultPage: typeof import('./components/ResultPage.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
   }
