@@ -74,10 +74,6 @@ export const useOcrStore = defineStore('ocr', () => {
 
       const response: EncodePasswordResponse = await ApiService.encodePassword()
 
-      if (response.code !== 200) {
-        throw new Error(response.message || 'Failed to encode password')
-      }
-
       // Store encoded password and public key
       authState.value.encodedPassword = response.data.password
       authState.value.publicKey = response.data.publicKey
@@ -112,10 +108,6 @@ export const useOcrStore = defineStore('ocr', () => {
       }
 
       const authResponse: AuthResponse = await ApiService.login(loginRequest)
-
-      if (authResponse.code !== 200) {
-        throw new Error(authResponse.message || 'Login failed')
-      }
 
       // Set authenticated state
       authState.value = {
@@ -239,9 +231,6 @@ export const useOcrStore = defineStore('ocr', () => {
 
       const response: OcrResponse = await ApiService.ocrDocumentProcess(ocrRequest)
 
-      if (response.code !== 200) {
-        throw new Error(response.message || 'OCR processing failed')
-      }
 
       const processingTime = Date.now() - startTime
 

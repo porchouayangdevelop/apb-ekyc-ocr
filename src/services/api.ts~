@@ -104,6 +104,7 @@ class ApiService {
   }
 
   static getAuthToken(): string | null {
+    console.log(localStorage.getItem('token'));
     return localStorage.getItem('token');
   }
 

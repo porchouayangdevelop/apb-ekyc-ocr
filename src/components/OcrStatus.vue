@@ -1,0 +1,265 @@
+<template>
+  <v-card v-if="isProcessing || hasResult" elevation="3" class="ocr-status-card">
+    <!-- Processing State -->
+    <div v-if="isProcessing">
+      <v-card-title class="text-center">
+        <v-icon class="mr-2" color="primary">mdi-cog</v-icon>
+        Processing Document
+      </v-card-title>
+      <v-card-text class="text-center">
+        <v-progress-circular
+          :model-value="progress"
+          :rotate="360"
+          :size="80"
+          :width="6"
+          color="primary"
+          class="mb-4"
+        >
+          {{ Math.round(progress) }}%
+        </v-progress-circular>
+
+        <div class="text-h6 mb-2">{{ currentStatus }}</div>
+        <div class="text-body-2 text-grey">
+          Estimated time: {{ estimatedTime }}
+        </div>
+
+        <!-- Processing Steps -->
+        <v-timeline density="compact" class="mt-6">
+          <v-timeline-item
+            v-for="(step, index) in processingSteps"
+            :key="index"
+            :dot-color="getStepColor(step.status)"
+            size="small"
+          >
+            <template v-slot:icon>
+              <v-icon v-if="step.status === 'completed'" size="small">mdi-check</v-icon>
+              <v-icon v-else-if="step.status === 'processing'" size="small">mdi-cog</v-icon>
+              <v-icon v-else size="small">mdi-clock-outline</v-icon>
+            </template>
+
+            <div class="d-flex justify-space-between align-center">
+              <span :class="{ 'text-grey': step.status === 'pending' }">
+                {{ step.title }}
+              </span>
+              <v-chip
+                v-if="step.status !== 'pending'"
+                :color="getStepColor(step.status)"
+                size="x-small"
+              >
+                {{ step.status }}
+              </v-chip>
+            </div>
+          </v-timeline-item>
+        </v-timeline>
+      </v-card-text>
+    </div>
+
+    <!-- Success State -->
+    <div v-else-if="hasResult && !error">
+      <v-card-title class="text-center text-success">
+        <v-icon class="mr-2" color="success">mdi-check-circle</v-icon>
+        Processing Complete
+      </v-card-title>
+      <v-card-text class="text-center">
+        <v-icon size="80" color="success" class="mb-4">mdi-file-check</v-icon>
+        <div class="text-h6 mb-2">Document processed successfully!</div>
+        <div class="text-body-2 mb-4">
+          Confidence: <strong>{{ result?.confidence }}%</strong> |
+          Processing time: <strong>{{ result?.processingTime }}ms</strong>
+        </div>
+
+        <v-btn
+          color="success"
+          @click="$emit('view-results')"
+          prepend-icon="mdi-eye"
+        >
+          View Results
+        </v-btn>
+      </v-card-text>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error">
+      <v-card-title class="text-center text-error">
+        <v-icon class="mr-2" color="error">mdi-alert-circle</v-icon>
+        Processing Failed
+      </v-card-title>
+      <v-card-text class="text-center">
+        <v-icon size="80" color="error" class="mb-4">mdi-file-remove</v-icon>
+        <div class="text-h6 mb-2">Something went wrong</div>
+        <div class="text-body-2 mb-4">{{ error }}</div>
+
+        <v-btn
+          color="error"
+          variant="outlined"
+          @click="$emit('retry')"
+          prepend-icon="mdi-refresh"
+          class="mr-2"
+        >
+          Try Again
+        </v-btn>
+
+        <v-btn
+          color="grey"
+          variant="outlined"
+          @click="$emit('reset')"
+          prepend-icon="mdi-close"
+        >
+          Reset
+        </v-btn>
+      </v-card-text>
+    </div>
+  </v-card>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import type { OcrResult } from '@/stores/ocrStore'
+
+interface Props {
+  isProcessing: boolean
+  result: OcrResult | null
+  error: string | null
+}
+
+interface Emits {
+  (e: 'view-results'): void
+  (e: 'retry'): void
+  (e: 'reset'): void
+}
+
+const props = defineProps<Props>()
+const emit = defineEmits<Emits>()
+
+// State
+const progress = ref(0)
+const currentStatus = ref('Initializing...')
+const estimatedTime = ref('Calculating...')
+let progressInterval: number | null = null
+
+// Processing steps
+const processingSteps = ref([
+  { title: 'Uploading image', status: 'pending' as 'pending' | 'processing' | 'completed' },
+  { title: 'Analyzing document', status: 'pending' as 'pending' | 'processing' | 'completed' },
+  { title: 'Extracting text', status: 'pending' as 'pending' | 'processing' | 'completed' },
+  { title: 'Processing data', status: 'pending' as 'pending' | 'processing' | 'completed' },
+  { title: 'Finalizing results', status: 'pending' as 'pending' | 'processing' | 'completed' }
+])
+
+// Computed
+const hasResult = computed(() => !!props.result)
+
+// Methods
+const getStepColor = (status: string): string => {
+  switch (status) {
+    case 'completed': return 'success'
+    case 'processing': return 'primary'
+    default: return 'grey'
+  }
+}
+
+const simulateProgress = () => {
+  if (!props.isProcessing) return
+
+  const steps = [
+    { progress: 20, status: 'Uploading image...', time: '15 seconds', stepIndex: 0 },
+    { progress: 40, status: 'Analyzing document structure...', time: '12 seconds', stepIndex: 1 },
+    { progress: 60, status: 'Extracting text content...', time: '8 seconds', stepIndex: 2 },
+    { progress: 80, status: 'Processing extracted data...', time: '5 seconds', stepIndex: 3 },
+    { progress: 95, status: 'Finalizing results...', time: '2 seconds', stepIndex: 4 }
+  ]
+
+  let currentStepIndex = 0
+
+  progressInterval = setInterval(() => {
+    if (currentStepIndex < steps.length && props.isProcessing) {
+      const step = steps[currentStepIndex]
+
+      // Update progress gradually
+      const targetProgress = step.progress
+      if (progress.value < targetProgress) {
+        progress.value = Math.min(progress.value + 2, targetProgress)
+      }
+
+      // Update status and estimated time
+      currentStatus.value = step.status
+      estimatedTime.value = step.time
+
+      // Update step status
+      if (progress.value >= step.progress) {
+        // Mark current step as completed
+        processingSteps.value[step.stepIndex].status = 'completed'
+
+        // Mark next step as processing
+        if (currentStepIndex + 1 < processingSteps.value.length) {
+          processingSteps.value[currentStepIndex + 1].status = 'processing'
+        }
+
+        currentStepIndex++
+      }
+    } else if (!props.isProcessing) {
+      clearProgress()
+    }
+  }, 200)
+}
+
+const clearProgress = () => {
+  if (progressInterval) {
+    clearInterval(progressInterval)
+    progressInterval = null
+  }
+}
+
+const resetProgress = () => {
+  progress.value = 0
+  currentStatus.value = 'Initializing...'
+  estimatedTime.value = 'Calculating...'
+  processingSteps.value.forEach((step, index) => {
+    step.status = index === 0 ? 'processing' : 'pending'
+  })
+}
+
+// Watch for processing state changes
+watch(
+  () => props.isProcessing,
+  (newValue) => {
+    if (newValue) {
+      resetProgress()
+      simulateProgress()
+    } else {
+      clearProgress()
+      if (props.result && !props.error) {
+        progress.value = 100
+        currentStatus.value = 'Complete!'
+        estimatedTime.value = 'Done'
+        processingSteps.value.forEach(step => {
+          step.status = 'completed'
+        })
+      }
+    }
+  },
+  { immediate: true }
+)
+
+// Cleanup on unmount
+onUnmounted(() => {
+  clearProgress()
+})
+</script>
+
+<style scoped>
+.ocr-status-card {
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.ocr-status-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.v-timeline {
+  max-width: 400px;
+  margin: 0 auto;
+}
+</style>

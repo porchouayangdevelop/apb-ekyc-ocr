@@ -75,3 +75,12 @@ axiosInstance.interceptors.response.use(
     return Promise.reject(error)
   }
 )
+
+export  default  {
+  install(app: App) {
+    app.config.globalProperties.$axios = axiosInstance
+    app.provide("axios",axiosInstance)
+  }
+}
+
+export {axiosInstance as axios}

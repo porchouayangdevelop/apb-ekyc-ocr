@@ -16,24 +16,17 @@ const router = createRouter({
 })
 
 
-router.beforeEach(async (to, from, next) => {
-  const ocrStore = useOcrStore()
+router.beforeEach(async (to,from,next)=>{
+  const ocrStore = useOcrStore();
 
-  // Restore authentication from localStorage if not already done
-  if (!ocrStore.authState.accessToken) {
-    ocrStore.restoreAuth()
+  if(!ocrStore.authState.accessToken){
+    ocrStore.restoreAuth();
   }
 
-  // Define public routes that don't require authentication
-  const publicRoutes = ['/login']
-  const isPublicRoute = publicRoutes.includes(to.path)
-  const isAuthenticated = ocrStore.isAuthenticated
+  const publicRoute = ['/login','/'];
+  const isPublicRoute = publicRoute.includes(to.path);
 
-  console.log('🔍 Route Guard:', {
-    path: to.path,
-    isPublicRoute,
-    isAuthenticated
-  })
+  const isAuthenticated = ocrStore.isAuthenticated;
 
   // If route requires auth and user is not authenticated
   if (!isPublicRoute && !isAuthenticated) {
@@ -41,15 +34,22 @@ router.beforeEach(async (to, from, next) => {
     return next('/login')
   }
 
-  // If user is authenticated and trying to access login page, redirect to home
+  // If user is authenticated and trying to access login page, redirect to dashboard
   if (isAuthenticated && to.path === '/login') {
-    console.log('✅ Already authenticated, redirecting to home')
-    return next('/')
+    console.log('✅ Already authenticated, redirecting to dashboard')
+    return next('/dashboard')
   }
 
-  // Allow navigation
+  // If accessing root and authenticated, redirect to dashboard
+  if (isAuthenticated && to.path === '/') {
+    console.log('✅ Redirecting authenticated user to dashboard')
+    return next('/dashboard')
+  }
+
   next()
-})
+
+
+});
 
 // Workaround for https://github.com/vitejs/vite/issues/11804
 router.onError((err, to) => {

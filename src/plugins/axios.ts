@@ -14,7 +14,7 @@ const axiosInstance: AxiosInstance = axios.create({
 axiosInstance.interceptors.request.use((config:AxiosRequestConfig) =>{
   const token =localStorage.getItem("token");
   const refreshToken = localStorage.getItem("refreshToken");
-  if(token && config.headers)  config.headers.Authorization = `Bearer ${token}`;
+  if(token && config.headers)  config.headers.Authorization = `${token}`;
 
   if(import.meta.env.DEV){
     console.log('🚀 Request:', {
