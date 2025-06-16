@@ -208,7 +208,7 @@ const getDocumentIcon = (type: DocumentType): string => {
   const icons = {
     national_id: 'mdi-card-account-details',
     passport: 'mdi-passport',
-    family_book: 'mdi-book-account'
+    family_card: 'mdi-book-account'
   }
   return icons[type] || 'mdi-file-document'
 }
@@ -217,7 +217,7 @@ const getDocumentTitle = (type: DocumentType): string => {
   const titles = {
     national_id: 'National ID Card',
     passport: 'Passport ID Card',
-    family_book: 'Family Book'
+    family_card: 'Family Book'
   }
   return titles[type] || type
 }

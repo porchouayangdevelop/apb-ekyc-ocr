@@ -1,4 +1,4 @@
-export type DocumentType = 'national_id' | 'passport' | 'family_book';
+export type DocumentType = 'national_id' | 'passport' | 'family_card';
 
 export interface ConversionHistoryItem {
   id: string

@@ -3,7 +3,7 @@ import type {App} from 'vue'
 
 const axiosInstance: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
-  timeout: 10000,
+  // timeout: 100000,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
