@@ -37,7 +37,7 @@
                     autocomplete="current-password"
                   ></v-text-field>
 
-                  
+
 
                   <v-btn
                     type="submit"
@@ -157,7 +157,7 @@ const handleLogin = async () => {
 
     showSnackbar('Login successful! Welcome to OCR Processor.', 'success')
 
-    // Redirect to main page
+    // Redirect to main pages
     await router.push('/')
 
   } catch (error: any) {

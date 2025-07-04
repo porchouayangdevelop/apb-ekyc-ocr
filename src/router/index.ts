@@ -41,7 +41,7 @@ router.beforeEach(async (to, from, next) => {
     return next('/login')
   }
 
-  // If user is authenticated and trying to access login page, redirect to home
+  // If user is authenticated and trying to access login pages, redirect to home
   if (isAuthenticated && to.path === '/login') {
     console.log('✅ Already authenticated, redirecting to home')
     return next('/')
@@ -55,9 +55,9 @@ router.beforeEach(async (to, from, next) => {
 router.onError((err, to) => {
   if (err?.message?.includes?.('Failed to fetch dynamically imported module')) {
     if (localStorage.getItem('vuetify:dynamic-reload')) {
-      console.error('Dynamic import error, reloading page did not fix it', err)
+      console.error('Dynamic import error, reloading pages did not fix it', err)
     } else {
-      console.log('Reloading page to fix dynamic import error')
+      console.log('Reloading pages to fix dynamic import error')
       localStorage.setItem('vuetify:dynamic-reload', 'true')
       location.assign(to.fullPath)
     }
